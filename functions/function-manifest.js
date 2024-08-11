@@ -1,19 +1,17 @@
-// create metadata for all the available functions to pass to completions API
 const tools = [
-  /*
-  {
+  /*{
     type: 'function',
     function: {
       name: 'checkInventory',
       say: 'Let me check our inventory right now.',
-      description: 'Check the inventory of airpods, airpods pro or airpods max.',
+      description: 'Check the inventory of AirPods, AirPods Pro, or AirPods Max.',
       parameters: {
         type: 'object',
         properties: {
           model: {
             type: 'string',
             'enum': ['airpods', 'airpods pro', 'airpods max'],
-            description: 'The model of airpods, either the airpods, airpods pro or airpods max',
+            description: 'The model of AirPods, either the AirPods, AirPods Pro, or AirPods Max',
           },
         },
         required: ['model'],
@@ -23,7 +21,7 @@ const tools = [
         properties: {
           stock: {
             type: 'integer',
-            description: 'An integer containing how many of the model are in currently in stock.'
+            description: 'An integer containing how many of the model are currently in stock.'
           }
         }
       }
@@ -34,14 +32,14 @@ const tools = [
     function: {
       name: 'checkPrice',
       say: 'Let me check the price, one moment.',
-      description: 'Check the price of given model of airpods, airpods pro or airpods max.',
+      description: 'Check the price of a given model of AirPods, AirPods Pro, or AirPods Max.',
       parameters: {
         type: 'object',
         properties: {
           model: {
             type: 'string',
             'enum': ['airpods', 'airpods pro', 'airpods max'],
-            description: 'The model of airpods, either the airpods, airpods pro or airpods max',
+            description: 'The model of AirPods, either the AirPods, AirPods Pro, or AirPods Max',
           },
         },
         required: ['model'],
@@ -51,7 +49,7 @@ const tools = [
         properties: {
           price: {
             type: 'integer',
-            description: 'the price of the model'
+            description: 'The price of the model'
           }
         }
       }
@@ -62,21 +60,21 @@ const tools = [
     function: {
       name: 'placeOrder',
       say: 'All right, I\'m just going to ring that up in our system.',
-      description: 'Places an order for a set of airpods.',
+      description: 'Places an order for a set of AirPods.',
       parameters: {
         type: 'object',
         properties: {
           model: {
             type: 'string',
             'enum': ['airpods', 'airpods pro'],
-            description: 'The model of airpods, either the regular or pro',
+            description: 'The model of AirPods, either the regular or Pro',
           },
           quantity: {
             type: 'integer',
-            description: 'The number of airpods they want to order',
+            description: 'The number of AirPods they want to order',
           },
         },
-        required: ['type', 'quantity'],
+        required: ['model', 'quantity'],
       },
       returns: {
         type: 'object',
@@ -92,8 +90,7 @@ const tools = [
         }
       }
     },
-  },
-  */
+  }, */
   {
     type: 'function',
     function: {
@@ -115,12 +112,40 @@ const tools = [
         properties: {
           status: {
             type: 'string',
-            description: 'Whether or not the customer call was successfully transfered'
+            description: 'Whether or not the customer call was successfully transferred'
           },
         }
       }
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'updateInsuranceQuote',
+      say: 'Let me update your insurance quote based on your selected dental coverage.',
+      description: 'Updates the customer\'s insurance quote by adding either basic or comprehensive dental coverage and calculating the updated monthly premium.',
+      parameters: {
+        type: 'object',
+        properties: {
+          dentalCoverageType: {
+            type: 'string',
+            enum: ['basic', 'comprehensive'],
+            description: 'The type of dental coverage to add to the insurance quote.',
+          },
+        },
+        required: ['dentalCoverageType'],
+      },
+      returns: {
+        type: 'object',
+        properties: {
+          updatedMonthlyPremium: {
+            type: 'number',
+            description: 'The updated monthly premium including the selected dental coverage and applicable tax.'
+          }
+        }
+      }
+    },
+  }
 ];
 
 module.exports = tools;

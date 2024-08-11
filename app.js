@@ -4,6 +4,7 @@ require('colors'); // Import the colors package for colored console output
 const express = require('express'); // Import Express for handling HTTP requests
 const ExpressWs = require('express-ws'); // Import Express WebSocket for handling WebSocket connections
 const EventEmitter = require('events'); // Import EventEmitter for handling events
+const { exec } = require('child_process');
 
 const { GptService } = require('./services/gpt-service');
 const { StreamService } = require('./services/stream-service');
@@ -164,6 +165,45 @@ app.get('/', (req, res) => {
 app.get('/trigger-update', (req, res) => {
   transcriptionEmitter.emit('update', transcriptions);
   res.send('Update triggered');
+});
+
+// Trigger outbound call
+app.get('/dial', (req, res) => {
+  exec('node scripts/outbound-call.js', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing script: ${error}`);
+      res.status(500).send(`Error executing script: ${error.message}`);
+      return;
+    }
+
+    if (stderr) {
+      console.error(`Script stderr: ${stderr}`);
+      res.status(500).send(`Script stderr: ${stderr}`);
+      return;
+    }
+
+    console.log(`Script stdout: ${stdout}`);
+    res.send(`Outbound call script executed successfully: ${stdout}`);
+  });
+});
+
+app.get('/payment', (req, res) => {
+  exec('node scripts/payment-call.js', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing script: ${error}`);
+      res.status(500).send(`Error executing script: ${error.message}`);
+      return;
+    }
+
+    if (stderr) {
+      console.error(`Script stderr: ${stderr}`);
+      res.status(500).send(`Script stderr: ${stderr}`);
+      return;
+    }
+
+    console.log(`Script stdout: ${stdout}`);
+    res.send(`Call forward script executed successfully: ${stdout}`);
+  });
 });
 
 // SSE (Server-Sent Events) endpoint to send transcription updates to the client

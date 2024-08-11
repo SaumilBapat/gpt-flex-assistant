@@ -8,7 +8,7 @@ const transferCall = async function (call) {
   const client = require('twilio')(accountSid, authToken);
 
   return await client.calls(call.callSid)
-    .update({twiml: `<Response><Dial>${process.env.TRANSFER_NUMBER}</Dial></Response>`})
+    .update({twiml: `<Response><Dial  timeout="20">${process.env.TRANSFER_NUMBER}</Dial><Pause length="5"/></Response>`})
     .then(() => {
       return 'The call was transferred successfully, say goodbye to the customer.';
     })
