@@ -1,9 +1,9 @@
-require('dotenv').config();
-require('colors');
+require('dotenv').config(); // Load environment variables from a .env file
+require('colors'); // Import the colors package for colored console output
 
-const express = require('express');
-const ExpressWs = require('express-ws');
-const EventEmitter = require('events');
+const express = require('express'); // Import Express for handling HTTP requests
+const ExpressWs = require('express-ws'); // Import Express WebSocket for handling WebSocket connections
+const EventEmitter = require('events'); // Import EventEmitter for handling events
 
 const { GptService } = require('./services/gpt-service');
 const { StreamService } = require('./services/stream-service');
@@ -22,7 +22,21 @@ const PORT = process.env.PORT || 3000;
 const transcriptions = {}; // Stores transcriptions by callSid
 const transcriptionEmitter = new EventEmitter(); // Emits events when a transcription is added
 
-// List all available transcriptions by callSid
+/**
+ * Main Server Application
+ *
+ * This script sets up an Express server with WebSocket support, designed to manage live voice interactions using Twilio, Deepgram, and GPT-4. It handles incoming voice calls, streams audio data, transcribes it, processes it with GPT-4, and converts responses back to speech.
+ *
+ * Key Features:
+ * - Handles incoming voice calls via Twilio, connecting them to a WebSocket stream.
+ * - Utilizes Deepgram for live transcription of the audio stream.
+ * - Uses GPT-4 to generate responses based on the transcribed text.
+ * - Converts GPT-4 responses into speech using a TTS service.
+ * - Streams the audio back to Twilio for playback to the caller.
+ * - Stores and provides access to the full transcription of the call for later retrieval.
+ */
+
+// Route to list all available transcriptions by callSid
 app.get('/', (req, res) => {
   const callSids = Object.keys(transcriptions);
 
@@ -68,21 +82,21 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Test Endpoint to trigger a transcript update
+// Test endpoint to trigger a transcription update event
 app.get('/trigger-update', (req, res) => {
   transcriptionEmitter.emit('update', transcriptions);
   res.send('Update triggered');
 });
 
-// SSE endpoint to send updates to the client when new transcriptions are added
+// SSE (Server-Sent Events) endpoint to send transcription updates to the client
 app.get('/transcription-updates', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
   const updateTranscriptions = (data) => {
-    const jsonData = JSON.stringify(data);  // Convert the object to a JSON string
-    res.write(`data: ${jsonData}\n\n`);  // Send the stringified data
+    const jsonData = JSON.stringify(data); // Convert the object to a JSON string
+    res.write(`data: ${jsonData}\n\n`); // Send the stringified data
   };
 
   // Send the initial state of transcriptions
@@ -97,6 +111,7 @@ app.get('/transcription-updates', (req, res) => {
   });
 });
 
+// Twilio webhook endpoint to handle incoming calls
 app.post('/incoming', (req, res) => {
   try {
     const response = new VoiceResponse();
@@ -110,6 +125,7 @@ app.post('/incoming', (req, res) => {
   }
 });
 
+// WebSocket endpoint to handle live audio streaming
 app.ws('/connection', (ws) => {
   console.log('~~~/connection -> start');
   
@@ -118,15 +134,15 @@ app.ws('/connection', (ws) => {
     let streamSid;
     let callSid;
 
-    const gptService = new GptService();
-    const streamService = new StreamService(ws);
-    const transcriptionService = new TranscriptionService();
-    const ttsService = new TextToSpeechService({});
+    const gptService = new GptService(); // Initialize GPT service
+    const streamService = new StreamService(ws); // Initialize stream service
+    const transcriptionService = new TranscriptionService(); // Initialize transcription service
+    const ttsService = new TextToSpeechService({}); // Initialize TTS service
   
-    let marks = [];
-    let interactionCount = 0;
+    let marks = []; // Array to track marks in the audio stream
+    let interactionCount = 0; // Counter for tracking interactions
   
-    // Incoming from MediaStream
+    // Handle incoming WebSocket messages
     ws.on('message', function message(data) {
       const msg = JSON.parse(data);
       if (msg.event === 'start') {
@@ -136,7 +152,7 @@ app.ws('/connection', (ws) => {
         streamService.setStreamSid(streamSid);
         gptService.setCallSid(callSid);
 
-        // Initialize transcription storage
+        // Initialize transcription storage for the callSid
         if (!transcriptions[callSid]) {
           transcriptions[callSid] = [];
         }
@@ -150,6 +166,7 @@ app.ws('/connection', (ws) => {
           ttsService.generate({partialResponseIndex: null, partialResponse: 'Hello! I understand you\'re looking for a pair of AirPods, is that correct?'}, 0);
         });
       } else if (msg.event === 'media') {
+        // Send audio payload for transcription
         transcriptionService.send(msg.media.payload);
       } else if (msg.event === 'mark') {
         const label = msg.mark.name;
@@ -160,8 +177,9 @@ app.ws('/connection', (ws) => {
       }
     });
   
+    // Handle transcription utterance events
     transcriptionService.on('utterance', async (text) => {
-      // This is a bit of a hack to filter out empty utterances
+      // Filter out empty utterances and handle interruptions
       if (marks.length > 0 && text?.length > 5) {
         console.log('Twilio -> Interruption, Clearing stream'.red);
         ws.send(
@@ -173,6 +191,7 @@ app.ws('/connection', (ws) => {
       }
     });
   
+    // Handle final transcription events
     transcriptionService.on('transcription', async (text) => {
       if (!text) { return; }
       console.log(`Interaction ${interactionCount} – STT -> GPT: ${text}`.yellow);
@@ -185,17 +204,20 @@ app.ws('/connection', (ws) => {
       interactionCount += 1;
     });
     
+    // Handle GPT reply events
     gptService.on('gptreply', async (gptReply, icount) => {
       console.log(`Interaction ${icount}: GPT -> TTS: ${gptReply.partialResponse}`.green );
       transcriptions[callSid].push(`IVR: ${gptReply.partialResponse}`);
       ttsService.generate(gptReply, icount);
     });
   
+    // Handle TTS speech events
     ttsService.on('speech', (responseIndex, audio, label, icount) => {
       console.log(`Interaction ${icount}: TTS -> TWILIO: ${label}`.blue);
       streamService.buffer(responseIndex, audio);
     });
   
+    // Handle audio sent events
     streamService.on('audiosent', (markLabel) => {
       marks.push(markLabel);
     });
@@ -204,10 +226,11 @@ app.ws('/connection', (ws) => {
   }
 });
 
+// Endpoint to retrieve a specific transcription by callSid
 app.get('/transcription/:callSid', (req, res) => {
   const callSid = req.params.callSid;
 
-  // Return the stored transcription
+  // Return the stored transcription for the given callSid
   if (transcriptions[callSid]) {
     res.json({ transcription: transcriptions[callSid] });
   } else {
@@ -215,6 +238,7 @@ app.get('/transcription/:callSid', (req, res) => {
   }
 });
 
+// Start the server on the specified port
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
