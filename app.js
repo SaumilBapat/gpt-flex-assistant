@@ -22,7 +22,7 @@ app.post('/incoming', (req, res) => {
     const response = new VoiceResponse();
     const connect = response.connect();
     connect.stream({ url: `wss://${process.env.SERVER}/connection` });
-  
+    console.log('~~~/incoming ->' + `ws://${process.env.SERVER}/connection`);
     res.type('text/xml');
     res.end(response.toString());
   } catch (err) {
@@ -31,6 +31,8 @@ app.post('/incoming', (req, res) => {
 });
 
 app.ws('/connection', (ws) => {
+  console.log('~~~/connection -> start');
+  
   try {
     ws.on('error', console.error);
     // Filled in from start message
