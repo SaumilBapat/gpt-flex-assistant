@@ -17,6 +17,21 @@ ExpressWs(app);
 
 const PORT = process.env.PORT || 3000;
 
+// In-memory store for transcriptions
+const transcriptions = {}; // Stores transcriptions by callSid
+
+// List all available transcriptions by callSid
+app.get('/', (req, res) => {
+  const callSids = Object.keys(transcriptions);
+
+  res.send(`
+    <h1>Available Transcriptions</h1>
+    <ul>
+      ${callSids.map(sid => `<li><a href="/transcription/${sid}">${sid}</a></li>`).join('')}
+    </ul>
+  `);
+});
+
 app.post('/incoming', (req, res) => {
   try {
     const response = new VoiceResponse();
@@ -57,6 +72,11 @@ app.ws('/connection', (ws) => {
         streamService.setStreamSid(streamSid);
         gptService.setCallSid(callSid);
 
+        // Initialize transcription storage
+        if (!transcriptions[callSid]) {
+          transcriptions[callSid] = [];
+        }
+
         // Set RECORDING_ENABLED='true' in .env to record calls
         recordingService(ttsService, callSid).then(() => {
           console.log(`Twilio -> Starting Media Stream for ${streamSid}`.underline.red);
@@ -89,6 +109,10 @@ app.ws('/connection', (ws) => {
     transcriptionService.on('transcription', async (text) => {
       if (!text) { return; }
       console.log(`Interaction ${interactionCount} – STT -> GPT: ${text}`.yellow);
+
+      // Store transcription
+      transcriptions[callSid].push(text);
+
       gptService.completion(text, interactionCount);
       interactionCount += 1;
     });
@@ -109,6 +133,17 @@ app.ws('/connection', (ws) => {
     });
   } catch (err) {
     console.log(err);
+  }
+});
+
+app.get('/transcription/:callSid', (req, res) => {
+  const callSid = req.params.callSid;
+
+  // Return the stored transcription
+  if (transcriptions[callSid]) {
+    res.json({ transcription: transcriptions[callSid] });
+  } else {
+    res.status(404).send('Transcription not found for this callSid');
   }
 });
 
