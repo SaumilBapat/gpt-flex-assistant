@@ -1,5 +1,6 @@
 // create metadata for all the available functions to pass to completions API
 const tools = [
+  /*
   {
     type: 'function',
     function: {
@@ -92,6 +93,7 @@ const tools = [
       }
     },
   },
+  */
   {
     type: 'function',
     function: {
