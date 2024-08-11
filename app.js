@@ -38,19 +38,86 @@ const transcriptionEmitter = new EventEmitter(); // Emits events when a transcri
 
 // Route to list all available transcriptions by callSid
 app.get('/', (req, res) => {
-  const callSids = Object.keys(transcriptions);
-
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
+
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Available Transcriptions</title>
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/salesforce-lightning-design-system/2.15.4/styles/salesforce-lightning-design-system.min.css" rel="stylesheet">
+      <style>
+        body {
+          font-family: "Salesforce Sans", Arial, sans-serif;
+          margin: 0;
+          padding: 1rem;
+          background-color: #f4f6f9;
+        }
+
+        h1 {
+          font-size: 1.5rem;
+          margin-bottom: 1rem;
+        }
+
+        h2 {
+          font-size: 1.25rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .slds-card {
+          background: #ffffff;
+          border: 1px solid #dddbda;
+          border-radius: 0.25rem;
+          box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.16);
+          margin-bottom: 1rem;
+          padding: 1rem;
+        }
+
+        .slds-card__header {
+          border-bottom: 1px solid #dddbda;
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
+        }
+
+        .slds-card__body {
+          padding: 0.5rem;
+        }
+
+        ul {
+          list-style-type: none;
+          padding-left: 0;
+        }
+
+        li {
+          padding: 0.25rem 0;
+        }
+
+        li:not(:last-child) {
+          border-bottom: 1px solid #dddbda;
+        }
+
+        .slds-text-heading_medium {
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .slds-text-body_regular {
+          font-size: 0.875rem;
+        }
+
+        .customer-text {
+          color: red;
+        }
+
+        .ivr-text {
+          color: blue;
+        }
+      </style>
     </head>
+
     <body>
-      <h1>Available Transcriptions</h1>
-      <ul id="transcriptionContainer"></ul>
+      <div id="transcriptionContainer" class="slds-grid slds-wrap"></div>
 
       <script>
         const source = new EventSource('/transcription-updates');
@@ -66,21 +133,32 @@ app.get('/', (req, res) => {
             const transcriptions = data[callSid];
             if (Array.isArray(transcriptions)) {
               return \`
-                <div>
-                  <h2>Transcription for CallSid: \${callSid}</h2>
-                  <ul>\${transcriptions.map(transcription => \`<li>\${transcription}</li>\`).join('')}</ul>
-                </div>\`;
+              <div class="slds-card slds-size_1-of-1 slds-medium-size_1-of-2">
+                <div class="slds-card__body">
+                  <ul>\${transcriptions.map(transcription => {
+                    if (transcription.startsWith('Customer:')) {
+                      return \`<li class="slds-text-body_regular customer-text">\${transcription}</li>\`;
+                    } else if (transcription.startsWith('IVR:')) {
+                      return \`<li class="slds-text-body_regular ivr-text">\${transcription}</li>\`;
+                    } else {
+                      return \`<li class="slds-text-body_regular">\${transcription}</li>\`;
+                    }
+                  }).join('')}</ul>
+                </div>
+              </div>\`;
             } else {
               console.error('Expected array, received:', transcriptions);
-              return \`<div>Error: Transcriptions for \${callSid} are not in the expected format.</div>\`;
+              return \`<div class="slds-card"><div class="slds-card__body">Error: Transcriptions for \${callSid} are not in the expected format.</div></div>\`;
             }
           }).join('');
         };
       </script>
     </body>
+
     </html>
   `);
 });
+
 
 // Test endpoint to trigger a transcription update event
 app.get('/trigger-update', (req, res) => {
