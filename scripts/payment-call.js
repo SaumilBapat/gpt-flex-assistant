@@ -25,11 +25,15 @@ async function forwardToPaymentGateway() {
       // Update the call to forward it to the payment gateway
       await client.calls(callSid)
         .update({
-          url: `https://handler.twilio.com/twiml/EH48e1e4cb7110c75c91cb317bf904aa41`, // Replace with your TwiML URL that handles the payment process
+          twiml: `<Response><Dial timeout="20">${process.env.PAYMENT_NUMBER}</Dial><Pause length="5"/></Response>`, // Corrected the twiml attribute
           method: 'POST'
         })
-        .then(call => console.log(`Call SID: ${call.sid} successfully forwarded to payment gateway.`))
-        .catch(error => console.error(`Failed to forward call SID: ${callSid} - ${error.message}`));
+        .then(() => {
+          console.log(`Call SID: ${callSid} successfully forwarded to payment gateway.`);
+        })
+        .catch(error => {
+          console.error(`Failed to forward call SID: ${callSid} - ${error.message}`);
+        });
     }
 
     console.log('All calls have been processed.');
