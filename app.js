@@ -49,9 +49,14 @@ app.get('/', (req, res) => {
       <link href="https://cdnjs.cloudflare.com/ajax/libs/salesforce-lightning-design-system/2.15.4/styles/salesforce-lightning-design-system.min.css" rel="stylesheet">
     </head>
 
-    <body style="font-family: 'Salesforce Sans', Arial, sans-serif; margin: 0; padding: 1rem; background-color: #f4f6f9;">
-      <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #333;">Call Transcript</h2>
-      <div id="transcriptionContainer" class="slds-grid slds-wrap"></div>
+    <body style="font-family: 'Salesforce Sans', Arial, sans-serif; margin: 0; padding-top: 1rem; background-color: #f4f4f4;">
+      
+    <div class="slds-card slds-size_1-of-1 slds-medium-size_1-of-2" style="background: #ffffff; border: 1px solid #dddbda; border-radius: 0.25rem; box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.16); margin-bottom: 1rem; padding: 1rem;">    
+      <div class="slds-grid slds-wrap">
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #0034ff;">Call Transcript</h3>
+        <div id="transcriptionContainer"></div>
+      </div>
+    </div>
 
       <script>
         const source = new EventSource('/transcription-updates');
@@ -67,8 +72,7 @@ app.get('/', (req, res) => {
             const transcriptions = data[callSid];
             if (Array.isArray(transcriptions)) {
               return \`
-              <div class="slds-card slds-size_1-of-1 slds-medium-size_1-of-2" style="background: #ffffff; border: 1px solid #dddbda; border-radius: 0.25rem; box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.16); margin-bottom: 1rem; padding: 1rem;">
-                <div class="slds-card__body" style="padding: 0.5rem;">
+               <div class="slds-card__body" style="padding: 0.5rem;">
                   <ul style="list-style-type: none; padding-left: 0;">
                     \${transcriptions.map(transcription => {
                       if (transcription.startsWith('Customer:')) {
@@ -80,7 +84,6 @@ app.get('/', (req, res) => {
                       }
                     }).join('')}
                   </ul>
-                </div>
               </div>\`;
             } else {
               console.error('Expected array, received:', transcriptions);

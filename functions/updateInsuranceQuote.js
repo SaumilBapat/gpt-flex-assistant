@@ -19,7 +19,7 @@ async function updateInsuranceQuote(functionArgs) {
   }
   
   return JSON.stringify({ 
-    updatedMonthlyPremium: Math.floor(updatedMonthlyPremium * 1.079) // Applying 7.9% tax 
+    updatedMonthlyPremium: Math.floor(updatedMonthlyPremium) // Applying 7.9% tax 
   });
 }
 
