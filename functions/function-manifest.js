@@ -1,96 +1,4 @@
 const tools = [
-  /*{
-    type: 'function',
-    function: {
-      name: 'checkInventory',
-      say: 'Let me check our inventory right now.',
-      description: 'Check the inventory of AirPods, AirPods Pro, or AirPods Max.',
-      parameters: {
-        type: 'object',
-        properties: {
-          model: {
-            type: 'string',
-            'enum': ['airpods', 'airpods pro', 'airpods max'],
-            description: 'The model of AirPods, either the AirPods, AirPods Pro, or AirPods Max',
-          },
-        },
-        required: ['model'],
-      },
-      returns: {
-        type: 'object',
-        properties: {
-          stock: {
-            type: 'integer',
-            description: 'An integer containing how many of the model are currently in stock.'
-          }
-        }
-      }
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'checkPrice',
-      say: 'Let me check the price, one moment.',
-      description: 'Check the price of a given model of AirPods, AirPods Pro, or AirPods Max.',
-      parameters: {
-        type: 'object',
-        properties: {
-          model: {
-            type: 'string',
-            'enum': ['airpods', 'airpods pro', 'airpods max'],
-            description: 'The model of AirPods, either the AirPods, AirPods Pro, or AirPods Max',
-          },
-        },
-        required: ['model'],
-      },
-      returns: {
-        type: 'object',
-        properties: {
-          price: {
-            type: 'integer',
-            description: 'The price of the model'
-          }
-        }
-      }
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'placeOrder',
-      say: 'All right, I\'m just going to ring that up in our system.',
-      description: 'Places an order for a set of AirPods.',
-      parameters: {
-        type: 'object',
-        properties: {
-          model: {
-            type: 'string',
-            'enum': ['airpods', 'airpods pro'],
-            description: 'The model of AirPods, either the regular or Pro',
-          },
-          quantity: {
-            type: 'integer',
-            description: 'The number of AirPods they want to order',
-          },
-        },
-        required: ['model', 'quantity'],
-      },
-      returns: {
-        type: 'object',
-        properties: {
-          price: {
-            type: 'integer',
-            description: 'The total price of the order including tax'
-          },
-          orderNumber: {
-            type: 'integer',
-            description: 'The order number associated with the order.'
-          }
-        }
-      }
-    },
-  }, */
   {
     type: 'function',
     function: {
@@ -121,7 +29,7 @@ const tools = [
   {
     type: 'function',
     function: {
-      name: 'updateInsuranceQuote',
+      name: 'addDentalInsurance',
       say: 'Let me update your insurance quote based on your selected dental coverage.',
       description: 'Updates the customer\'s insurance quote by adding either basic or comprehensive dental coverage and calculating the updated monthly premium.',
       parameters: {
@@ -141,6 +49,59 @@ const tools = [
           updatedMonthlyPremium: {
             type: 'number',
             description: 'The updated monthly premium including the selected dental coverage and applicable tax.'
+          }
+        }
+      }
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'findDentalCoverageOptions',
+      say: 'Let me find the dental coverage options available to you.',
+      description: 'Provides a list of dental coverage options along with associated benefits and price increases.',
+      parameters: {
+        type: 'object',
+        properties: {
+          currentCoverageOptions: {
+            type: 'object',
+            properties: {
+              planType: {
+                type: 'string',
+                description: 'The type of insurance plan, such as PPO or HMO.',
+              },
+              dentalCoverage: {
+                type: 'string',
+                description: 'Indicates if the current plan includes dental coverage (Yes/No).',
+              }
+            },
+            required: ['planType', 'dentalCoverage'],
+          }
+        },
+        required: ['currentCoverageOptions'],
+      },
+      returns: {
+        type: 'object',
+        properties: {
+          dentalOptions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                optionName: {
+                  type: 'string',
+                  description: 'The name of the dental coverage option.',
+                },
+                benefits: {
+                  type: 'string',
+                  description: 'A brief description of the benefits provided by this dental coverage option.',
+                },
+                priceIncrease: {
+                  type: 'number',
+                  description: 'The increase in monthly premium if this dental coverage is selected.',
+                }
+              }
+            }
           }
         }
       }
